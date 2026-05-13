@@ -16,6 +16,7 @@ cd VoidGuard
 pip install -r requirements.txt
 ```
 📖 Usage
+ 
 ​To initiate a scan using the core module, run:
 ```VoidScan2.py```
  Requirements
