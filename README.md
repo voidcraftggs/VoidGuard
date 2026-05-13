@@ -11,8 +11,7 @@
 
 Clone the repository and install the necessary requirements:
 
-```bash
-git clone [https://github.com/voidcraftggs/VoidGuard.git](https://github.com/voidcraftggs/VoidGuard.git)
+git clone https://github.com/voidcraftggs/VoidGuard.git
 cd VoidGuard
 pip install -r requirements.txt
 ```
