@@ -1,0 +1,7 @@
+requests
+watchdog
+ssdeep
+jsonschema
+tqdm
+python-magic
+yara-python
