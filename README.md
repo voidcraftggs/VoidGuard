@@ -22,4 +22,4 @@ pip install -r requirements.txt
 ​The dependencies for this project are managed via requirements.txt. Ensure you have Python 3.x installed before running the scanner.
 ​🤝 Contributing
 ​Contributions are welcome! Feel free to open issues or submit pull requests to improve the scanning algorithms or add new features.
-```
+
