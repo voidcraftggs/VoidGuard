@@ -1,5 +1,5 @@
 # VoidGuard 🛡️
-```
+
 **VoidGuard** is a technical utility developed for system scanning and security auditing. It leverages Python to provide a fast and reliable way to analyze system components via `VoidScan2.py`.
 
 ## 🚀 Features
@@ -10,13 +10,12 @@
 ## 🛠️ Installation
 
 Clone the repository and install the necessary requirements:
-
+```
 git clone https://github.com/voidcraftggs/VoidGuard.git
 cd VoidGuard
 pip install -r requirements.txt
 ```
 📖 Usage
- 
 ​To initiate a scan using the core module, run:
 ```VoidScan2.py```
  Requirements
