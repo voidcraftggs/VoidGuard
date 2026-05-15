@@ -6,4 +6,5 @@
 | ------- | ------------------ |
 | ALL     | :white_check_mark: |
 
-A Safe Security Tool For Termux Mobile Its Fully Safe No Data Stealing 
+A Safe Security Tool For Termux Mobile Its Fully Safe, No Data Stealing 
+
