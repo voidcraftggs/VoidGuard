@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoidGrand | Advanced Malware Detection</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+:root{
+  --bg:#060910;
+  --surface:#0C1020;
+  --surface2:#111827;
+  --purple:#8B5CF6;
+  --purple-dim:#6D28D9;
+  --cyan:#22D3EE;
+  --green:#10B981;
+  --red:#F87171;
+  --amber:#FBBF24;
+  --text:#F1F5F9;
+  --muted:#64748B;
+  --muted2:#94A3B8;
+  --border:rgba(255,255,255,0.06);
+  --border2:rgba(255,255,255,0.1);
+  --glow-purple:rgba(139,92,246,0.25);
+  --glow-cyan:rgba(34,211,238,0.15);
+}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Space Grotesk',sans-serif;
+  overflow-x:hidden;
+  line-height:1.6;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--purple-dim);border-radius:4px;}
+
+/* ── NOISE OVERLAY ── */
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events:none;
+  z-index:9999;
+  opacity:0.4;
+}
+
+.container{width:90%;max-width:1200px;margin:auto;}
+
+/* ── NAV ── */
+nav{
+  position:fixed;
+  width:100%;
+  top:0;
+  z-index:100;
+  padding:0;
+}
+.nav-inner{
+  margin:16px auto;
+  width:90%;
+  max-width:1200px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:rgba(6,9,16,0.7);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border:1px solid var(--border2);
+  border-radius:16px;
+  padding:14px 24px;
+}
+.logo{
+  font-size:20px;
+  font-weight:700;
+  letter-spacing:-0.5px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.logo-icon{
+  width:32px;height:32px;
+  background:linear-gradient(135deg,var(--purple),var(--purple-dim));
+  border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;
+  box-shadow:0 0 20px var(--glow-purple);
+}
+.logo-text em{
+  font-style:normal;
+  color:var(--purple);
+}
+.nav-links{display:flex;gap:4px;}
+.nav-links a{
+  text-decoration:none;
+  color:var(--muted2);
+  padding:8px 14px;
+  border-radius:8px;
+  font-size:14px;
+  font-weight:500;
+  transition:all 0.2s;
+}
+.nav-links a:hover{color:var(--text);background:rgba(255,255,255,0.05);}
+.nav-cta{
+  background:linear-gradient(135deg,var(--purple),var(--purple-dim));
+  color:white!important;
+  padding:8px 18px!important;
+  border-radius:8px!important;
+  box-shadow:0 0 20px var(--glow-purple);
+}
+.nav-cta:hover{transform:translateY(-1px);box-shadow:0 0 30px var(--glow-purple)!important;}
+
+/* ── HERO ── */
+.hero{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  position:relative;
+  overflow:hidden;
+  padding-top:100px;
+}
+.hero-bg{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  overflow:hidden;
+}
+.orb{
+  position:absolute;
+  border-radius:50%;
+  filter:blur(120px);
+  pointer-events:none;
+}
+.orb-1{
+  width:600px;height:600px;
+  background:radial-gradient(circle,rgba(139,92,246,0.18),transparent 70%);
+  top:-150px;right:-100px;
+  animation:drift 8s ease-in-out infinite alternate;
+}
+.orb-2{
+  width:500px;height:500px;
+  background:radial-gradient(circle,rgba(34,211,238,0.12),transparent 70%);
+  bottom:-200px;left:-100px;
+  animation:drift 10s ease-in-out infinite alternate-reverse;
+}
+.orb-3{
+  width:300px;height:300px;
+  background:radial-gradient(circle,rgba(16,185,129,0.1),transparent 70%);
+  top:40%;left:40%;
+  animation:drift 12s ease-in-out infinite;
+}
+@keyframes drift{
+  from{transform:translate(0,0);}
+  to{transform:translate(30px,20px);}
+}
+/* Dot grid */
+.hero-grid{
+  position:absolute;
+  inset:0;
+  background-image:radial-gradient(circle,rgba(255,255,255,0.08) 1px,transparent 1px);
+  background-size:32px 32px;
+  mask-image:radial-gradient(ellipse 70% 70% at 50% 50%,black,transparent);
+  -webkit-mask-image:radial-gradient(ellipse 70% 70% at 50% 50%,black,transparent);
+}
+.hero-content{
+  position:relative;
+  z-index:2;
+  max-width:750px;
+}
+.hero-eyebrow{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 16px;
+  border-radius:999px;
+  background:rgba(139,92,246,0.1);
+  border:1px solid rgba(139,92,246,0.25);
+  color:#C4B5FD;
+  margin-bottom:32px;
+  font-size:13px;
+  font-weight:500;
+  letter-spacing:0.5px;
+}
+.eyebrow-dot{
+  width:6px;height:6px;
+  background:var(--purple);
+  border-radius:50%;
+  box-shadow:0 0 8px var(--purple);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{
+  0%,100%{opacity:1;transform:scale(1);}
+  50%{opacity:0.5;transform:scale(0.8);}
+}
+.hero h1{
+  font-size:clamp(48px,6vw,82px);
+  line-height:1.0;
+  font-weight:700;
+  letter-spacing:-2px;
+  margin-bottom:28px;
+}
+.hero h1 .line2{
+  font-family:'Instrument Serif',serif;
+  font-style:italic;
+  font-weight:400;
+  color:var(--purple);
+}
+.hero h1 .line3{
+  background:linear-gradient(90deg,var(--cyan),var(--green));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.hero-desc{
+  color:var(--muted2);
+  font-size:17px;
+  line-height:1.8;
+  margin-bottom:40px;
+  max-width:580px;
+}
+.hero-desc strong{color:var(--text);font-weight:500;}
+.hero-actions{display:flex;gap:14px;flex-wrap:wrap;align-items:center;}
+.btn-primary{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:14px 28px;
+  background:var(--purple);
+  color:white;
+  font-family:'Space Grotesk',sans-serif;
+  font-weight:600;font-size:15px;
+  border-radius:12px;border:none;
+  cursor:pointer;text-decoration:none;
+  box-shadow:0 0 40px var(--glow-purple),inset 0 1px 0 rgba(255,255,255,0.1);
+  transition:all 0.25s;
+  position:relative;overflow:hidden;
+}
+.btn-primary::before{
+  content:'';
+  position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,0.1),transparent);
+  border-radius:inherit;
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 0 60px var(--glow-purple),inset 0 1px 0 rgba(255,255,255,0.15);}
+.btn-secondary{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:14px 28px;
+  background:transparent;
+  color:var(--text);
+  font-family:'Space Grotesk',sans-serif;
+  font-weight:500;font-size:15px;
+  border-radius:12px;
+  border:1px solid var(--border2);
+  cursor:pointer;text-decoration:none;
+  transition:all 0.25s;
+}
+.btn-secondary:hover{border-color:rgba(255,255,255,0.2);background:rgba(255,255,255,0.04);}
+.hero-trust{
+  display:flex;align-items:center;gap:16px;
+  margin-top:48px;
+  padding-top:48px;
+  border-top:1px solid var(--border);
+}
+.trust-item{
+  display:flex;align-items:center;gap:8px;
+  color:var(--muted2);font-size:13px;
+}
+.trust-dot{
+  width:8px;height:8px;border-radius:50%;
+}
+.trust-dot.green{background:var(--green);}
+.trust-dot.cyan{background:var(--cyan);}
+.trust-dot.amber{background:var(--amber);}
+
+/* ── FEATURES ── */
+#features{padding:120px 0;}
+.section-label{
+  display:inline-flex;align-items:center;gap:8px;
+  color:var(--purple);font-size:12px;font-weight:600;
+  letter-spacing:1.5px;text-transform:uppercase;
+  margin-bottom:16px;
+}
+.section-label::before{
+  content:'';width:24px;height:1px;background:var(--purple);
+}
+.section-header{
+  display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:end;
+  margin-bottom:70px;
+}
+.section-header h2{
+  font-size:clamp(32px,3.5vw,52px);
+  font-weight:700;letter-spacing:-1.5px;
+  line-height:1.1;
+}
+.section-header h2 em{
+  font-family:'Instrument Serif',serif;
+  font-style:italic;font-weight:400;
+  color:var(--purple);
+}
+.section-header p{
+  color:var(--muted2);font-size:16px;line-height:1.8;
+}
+.features-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:2px;
+  background:var(--border);border-radius:20px;overflow:hidden;
+}
+.feature-card{
+  background:var(--surface);
+  padding:36px;
+  transition:all 0.3s;
+  position:relative;overflow:hidden;
+}
+.feature-card::before{
+  content:'';
+  position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--glow-purple),transparent 60%);
+  opacity:0;
+  transition:opacity 0.3s;
+}
+.feature-card:hover::before{opacity:1;}
+.feature-card:hover{background:var(--surface2);}
+.feat-num{
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;color:var(--muted);
+  margin-bottom:24px;letter-spacing:1px;
+}
+.feat-icon{
+  width:48px;height:48px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;margin-bottom:20px;
+  border:1px solid;
+}
+.feat-icon.purple{background:rgba(139,92,246,0.1);border-color:rgba(139,92,246,0.2);}
+.feat-icon.cyan{background:rgba(34,211,238,0.1);border-color:rgba(34,211,238,0.2);}
+.feat-icon.green{background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.2);}
+.feat-icon.amber{background:rgba(251,191,36,0.1);border-color:rgba(251,191,36,0.2);}
+.feature-card h3{font-size:18px;font-weight:600;margin-bottom:12px;letter-spacing:-0.3px;}
+.feature-card p{color:var(--muted2);font-size:14px;line-height:1.75;}
+.feat-tag{
+  display:inline-block;margin-top:16px;
+  font-size:11px;font-weight:600;letter-spacing:0.5px;
+  padding:4px 10px;border-radius:6px;
+  background:rgba(139,92,246,0.1);color:#C4B5FD;
+  border:1px solid rgba(139,92,246,0.15);
+}
+
+/* ── TERMINAL ── */
+#terminal{padding:120px 0;background:var(--surface);position:relative;overflow:hidden;}
+#terminal::before{
+  content:'';position:absolute;
+  top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--purple),var(--cyan),transparent);
+}
+#terminal::after{
+  content:'';position:absolute;
+  bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--purple),var(--cyan),transparent);
+}
+.terminal-layout{
+  display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;
+}
+.terminal-info h2{
+  font-size:clamp(28px,3vw,44px);
+  font-weight:700;letter-spacing:-1px;line-height:1.15;
+  margin-bottom:20px;
+}
+.terminal-info h2 em{
+  font-family:'Instrument Serif',serif;
+  font-style:italic;font-weight:400;color:var(--cyan);
+}
+.terminal-info p{color:var(--muted2);font-size:16px;line-height:1.8;margin-bottom:32px;}
+.feature-list{display:flex;flex-direction:column;gap:12px;}
+.feature-list-item{
+  display:flex;align-items:center;gap:12px;
+  color:var(--muted2);font-size:14px;
+}
+.feature-list-item::before{
+  content:'✓';
+  width:20px;height:20px;border-radius:50%;
+  background:rgba(16,185,129,0.15);
+  border:1px solid rgba(16,185,129,0.3);
+  color:var(--green);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;flex-shrink:0;
+  display:inline-flex;
+}
+.terminal-window{
+  background:#040810;
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:0 0 80px rgba(0,0,0,0.6),0 0 40px rgba(139,92,246,0.05);
+}
+.terminal-bar{
+  background:#0A0F1E;
+  padding:14px 18px;
+  display:flex;align-items:center;gap:12px;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.win-dots{display:flex;gap:6px;}
+.wd{
+  width:12px;height:12px;border-radius:50%;
+  cursor:pointer;transition:opacity 0.2s;
+}
+.wd:hover{opacity:0.8;}
+.wd.r{background:#FF5F57;}
+.wd.y{background:#FFBD2E;}
+.wd.g{background:#28CA41;}
+.win-title{
+  flex:1;text-align:center;
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px;color:var(--muted);
+}
+.terminal-body{
+  padding:28px 32px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:13px;line-height:1.9;
+}
+.t-line{display:flex;gap:12px;align-items:baseline;}
+.t-prompt{color:var(--purple);flex-shrink:0;}
+.t-cmd{color:#E2E8F0;}
+.t-output{color:var(--muted2);padding-left:24px;}
+.t-warn{color:var(--amber);}
+.t-danger{color:var(--red);}
+.t-success{color:var(--green);}
+.t-info{color:var(--cyan);}
+.t-line{
+  opacity:0;
+  animation:slideIn 0.4s ease forwards;
+}
+.t-line:nth-child(1){animation-delay:0.2s;}
+.t-line:nth-child(2){animation-delay:0.7s;}
+.t-line:nth-child(3){animation-delay:1.2s;}
+.t-line:nth-child(4){animation-delay:1.7s;}
+.t-line:nth-child(5){animation-delay:2.2s;}
+.t-line:nth-child(6){animation-delay:2.7s;}
+.t-line:nth-child(7){animation-delay:3.2s;}
+.t-line:nth-child(8){animation-delay:3.7s;}
+.cursor{
+  display:inline-block;width:8px;height:14px;
+  background:var(--purple);margin-left:2px;
+  vertical-align:middle;border-radius:1px;
+  animation:blink 1s step-end infinite;
+}
+@keyframes slideIn{
+  from{opacity:0;transform:translateX(-8px);}
+  to{opacity:1;transform:translateX(0);}
+}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+
+/* ── STATS ── */
+#stats{padding:120px 0;}
+.stats-header{text-align:center;margin-bottom:70px;}
+.stats-header h2{
+  font-size:clamp(32px,3.5vw,52px);
+  font-weight:700;letter-spacing:-1.5px;margin-bottom:16px;
+}
+.stats-header h2 em{
+  font-family:'Instrument Serif',serif;
+  font-style:italic;font-weight:400;color:var(--purple);
+}
+.stats-header p{color:var(--muted2);max-width:500px;margin:auto;font-size:16px;}
+.stats-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:2px;
+  background:var(--border);border-radius:24px;overflow:hidden;
+  margin-bottom:2px;
+}
+.stat-card{
+  background:var(--surface);padding:44px 36px;
+  position:relative;overflow:hidden;transition:background 0.3s;
+}
+.stat-card:hover{background:var(--surface2);}
+.stat-card::after{
+  content:'';
+  position:absolute;bottom:0;left:36px;right:36px;height:2px;
+  border-radius:2px;
+  opacity:0;transition:opacity 0.3s;
+}
+.stat-card:hover::after{opacity:1;}
+.stat-card.s1::after{background:linear-gradient(90deg,var(--purple),var(--cyan));}
+.stat-card.s2::after{background:linear-gradient(90deg,var(--cyan),var(--green));}
+.stat-card.s3::after{background:linear-gradient(90deg,var(--green),var(--amber));}
+.stat-card.s4::after{background:linear-gradient(90deg,var(--amber),var(--purple));}
+.stat-num{
+  font-size:52px;font-weight:700;letter-spacing:-2px;
+  line-height:1;margin-bottom:12px;
+}
+.stat-num.purple{color:var(--purple);}
+.stat-num.cyan{color:var(--cyan);}
+.stat-num.green{color:var(--green);}
+.stat-num.amber{color:var(--amber);}
+.stat-label{color:var(--muted2);font-size:14px;font-weight:500;}
+.stat-sub{color:var(--muted);font-size:12px;margin-top:6px;}
+
+/* ── CTA BANNER ── */
+.cta-banner{
+  margin:0 0 120px;
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:24px;
+  padding:64px;
+  text-align:center;
+  position:relative;overflow:hidden;
+}
+.cta-banner::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 80% at 50% 100%,var(--glow-purple),transparent);
+}
+.cta-banner h2{
+  font-size:clamp(28px,3vw,44px);
+  font-weight:700;letter-spacing:-1px;margin-bottom:16px;
+  position:relative;
+}
+.cta-banner h2 em{
+  font-family:'Instrument Serif',serif;
+  font-style:italic;font-weight:400;color:var(--purple);
+}
+.cta-banner p{
+  color:var(--muted2);font-size:16px;margin-bottom:36px;
+  max-width:480px;margin-left:auto;margin-right:auto;
+  position:relative;
+}
+.cta-banner .cta-btns{
+  display:flex;gap:14px;justify-content:center;
+  position:relative;
+}
+
+/* ── FOOTER ── */
+footer{
+  border-top:1px solid var(--border);
+  padding:48px 0;
+}
+.footer-inner{
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:24px;
+}
+.footer-logo{font-size:18px;font-weight:700;}
+.footer-logo em{font-style:normal;color:var(--purple);}
+.footer-links{display:flex;gap:4px;}
+.footer-links a{
+  text-decoration:none;color:var(--muted);
+  font-size:13px;padding:6px 10px;border-radius:6px;
+  transition:color 0.2s;
+}
+.footer-links a:hover{color:var(--text);}
+.footer-copy{color:var(--muted);font-size:13px;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .section-header{grid-template-columns:1fr;}
+  .features-grid{grid-template-columns:repeat(2,1fr);}
+  .terminal-layout{grid-template-columns:1fr;}
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .nav-links{display:none;}
+  .cta-banner{padding:40px 28px;}
+}
+@media(max-width:600px){
+  .features-grid{grid-template-columns:1fr;}
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .hero h1{letter-spacing:-1px;}
+  .hero-trust{flex-direction:column;align-items:flex-start;}
+}
+
+/* ── FADE-IN ON LOAD ── */
+.fade-up{
+  opacity:0;transform:translateY(24px);
+  transition:opacity 0.7s ease,transform 0.7s ease;
+}
+.fade-up.visible{opacity:1;transform:translateY(0);}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <div class="logo">
+      <div class="logo-icon">⚡</div>
+      <div class="logo-text">Void<em>Grand</em></div>
+    </div>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#terminal">Live Demo</a>
+      <a href="#stats">Performance</a>
+      <a href="#" class="nav-cta">Download v4</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="hero-grid"></div>
+  </div>
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-eyebrow">
+        <span class="eyebrow-dot"></span>
+        Threat Detection Engine v4.0 — Now Live
+      </div>
+      <h1>
+        Next-level<br>
+        <span class="line2">malware defense</span><br>
+        <span class="line3">for the modern era</span>
+      </h1>
+      <p class="hero-desc">
+        Advanced behavioral scanner for <strong>Android &amp; Linux</strong> — powered by
+        fuzzy hashing, YARA rules, sandbox intelligence, entropy analysis,
+        real-time monitoring, and multi-layer threat scoring.
+      </p>
+      <div class="hero-actions">
+        <a href="#" class="btn-primary">
+          ⚡ Download Now
+        </a>
+        <a href="#" class="btn-secondary">
+          View Documentation →
+        </a>
+      </div>
+      <div class="hero-trust">
+        <div class="trust-item">
+          <span class="trust-dot green"></span>
+          99% detection rate
+        </div>
+        <div class="trust-item">
+          <span class="trust-dot cyan"></span>
+          YARA + SSDEEP analysis
+        </div>
+        <div class="trust-item">
+          <span class="trust-dot amber"></span>
+          VirusTotal integration
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="container">
+    <div class="section-header fade-up">
+      <div>
+        <div class="section-label">Core capabilities</div>
+        <h2>Built for <em>serious</em><br>threat intelligence</h2>
+      </div>
+      <p>VoidGrand combines enterprise-grade malware analysis with intelligent behavioral detection. Every layer is designed to catch what others miss.</p>
+    </div>
+
+    <div class="features-grid fade-up">
+      <div class="feature-card">
+        <div class="feat-num">01 — BEHAVIORAL</div>
+        <div class="feat-icon purple">🛡️</div>
+        <h3>Behavioral Analysis</h3>
+        <p>Detect suspicious activity patterns — reverse shells, ransomware indicators, persistence methods, and privilege escalation before damage is done.</p>
+        <span class="feat-tag">RUNTIME ANALYSIS</span>
+      </div>
+      <div class="feature-card">
+        <div class="feat-num">02 — MONITORING</div>
+        <div class="feat-icon cyan">⚡</div>
+        <h3>Real-Time Protection</h3>
+        <p>Watchdog-based filesystem monitoring provides instant threat detection and automatic isolation. Zero-gap coverage, 24/7.</p>
+        <span class="feat-tag">LIVE WATCHDOG</span>
+      </div>
+      <div class="feature-card">
+        <div class="feat-num">03 — HASHING</div>
+        <div class="feat-icon green">🧬</div>
+        <h3>Fuzzy Hashing</h3>
+        <p>Catch malware variants and renamed payloads with SSDEEP similarity analysis. Detects polymorphic threats that evade signature matching.</p>
+        <span class="feat-tag">SSDEEP ENGINE</span>
+      </div>
+      <div class="feature-card">
+        <div class="feat-num">04 — MOBILE</div>
+        <div class="feat-icon amber">📦</div>
+        <h3>APK Intelligence</h3>
+        <p>Deep Android manifest inspection — dangerous permissions, exported components, hidden payloads, and certificate anomalies.</p>
+        <span class="feat-tag">ANDROID APK</span>
+      </div>
+      <div class="feature-card">
+        <div class="feat-num">05 — SCORING</div>
+        <div class="feat-icon purple">🎯</div>
+        <h3>Threat Scoring</h3>
+        <p>Multi-layer weighted scoring engine provides precise risk classification. Understand exactly why a file is flagged, not just that it is.</p>
+        <span class="feat-tag">WEIGHTED ENGINE</span>
+      </div>
+      <div class="feature-card">
+        <div class="feat-num">06 — CLOUD</div>
+        <div class="feat-icon cyan">🌐</div>
+        <h3>Sandbox Intelligence</h3>
+        <p>Integrated VirusTotal and Hybrid Analysis cloud verification for cross-referencing against 70+ antivirus engines in real time.</p>
+        <span class="feat-tag">VIRUSTOTAL API</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TERMINAL -->
+<section id="terminal">
+  <div class="container">
+    <div class="terminal-layout">
+      <div class="terminal-info fade-up">
+        <div class="section-label">Live preview</div>
+        <h2>Watch threats<br>get <em>neutralized</em></h2>
+        <p>Real-time threat detection with intelligent quarantine. VoidGrand analyzes, scores, and isolates threats before they can execute.</p>
+        <div class="feature-list">
+          <div class="feature-list-item">Scans 1,000+ files per second</div>
+          <div class="feature-list-item">Automatic quarantine on HIGH threats</div>
+          <div class="feature-list-item">Detailed JSON threat reports</div>
+          <div class="feature-list-item">Zero false-positive tuning mode</div>
+          <div class="feature-list-item">Cross-platform: Linux &amp; Android</div>
+        </div>
+      </div>
+
+      <div class="terminal-window fade-up">
+        <div class="terminal-bar">
+          <div class="win-dots">
+            <div class="wd r"></div>
+            <div class="wd y"></div>
+            <div class="wd g"></div>
+          </div>
+          <div class="win-title">voidgrand — bash</div>
+        </div>
+        <div class="terminal-body">
+          <div class="t-line">
+            <span class="t-prompt">❯</span>
+            <span class="t-cmd">python voidgrand.py --scan /downloads --deep</span>
+          </div>
+          <div class="t-line t-output t-info">
+            🛡️  VoidGrand v4.0 initialized · YARA + SSDEEP loaded
+          </div>
+          <div class="t-line t-output t-info">
+            📂  Scanning 1,247 files across 38 directories...
+          </div>
+          <div class="t-line t-output">
+            ✓&nbsp;&nbsp;[892/1247] — No threats detected
+          </div>
+          <div class="t-line t-output t-warn">
+            ⚠&nbsp;&nbsp;[1103/1247] — MEDIUM: adware.bundle.apk [score: 62]
+          </div>
+          <div class="t-line t-output t-danger">
+            ✗&nbsp;&nbsp;[1198/1247] — HIGH: trojan.dropper.apk [score: 94]
+          </div>
+          <div class="t-line t-output t-danger">
+            &nbsp;&nbsp;&nbsp;&nbsp;→ Matches: YARA:Mirai.Botnet, SSDEEP:97%
+          </div>
+          <div class="t-line t-output t-success">
+            🚨  Quarantined → /voidgrand/quarantine/trojan.dropper.apk
+          </div>
+          <div class="t-line t-output">
+            <span class="cursor"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section id="stats">
+  <div class="container">
+    <div class="stats-header fade-up">
+      <div class="section-label">Performance metrics</div>
+      <h2>Numbers that<br><em>speak for themselves</em></h2>
+      <p>Tested against real-world malware datasets across Android and Linux environments.</p>
+    </div>
+
+    <div class="stats-grid fade-up">
+      <div class="stat-card s1">
+        <div class="stat-num purple">99%</div>
+        <div class="stat-label">Threat Detection Rate</div>
+        <div class="stat-sub">Across 50k+ malware samples</div>
+      </div>
+      <div class="stat-card s2">
+        <div class="stat-num cyan">24/7</div>
+        <div class="stat-label">Real-Time Protection</div>
+        <div class="stat-sub">Watchdog-based monitoring</div>
+      </div>
+      <div class="stat-card s3">
+        <div class="stat-num green">&lt;2ms</div>
+        <div class="stat-label">Per-File Scan Time</div>
+        <div class="stat-sub">SSDEEP + YARA combined</div>
+      </div>
+      <div class="stat-card s4">
+        <div class="stat-num amber">70+</div>
+        <div class="stat-label">AV Engines Cross-Checked</div>
+        <div class="stat-sub">Via VirusTotal API</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BANNER -->
+<div class="container">
+  <div class="cta-banner fade-up">
+    <h2>Start protecting your<br>systems with <em>VoidGrand</em></h2>
+    <p>Open-source, actively maintained, and designed for security professionals who don't compromise.</p>
+    <div class="cta-btns">
+      <a href="#" class="btn-primary">⚡ Download v4.0 Free</a>
+      <a href="#" class="btn-secondary">View on GitHub →</a>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-logo">Void<em>Grand</em></div>
+      <div class="footer-links">
+        <a href="#">Features</a>
+        <a href="#">Documentation</a>
+        <a href="#">GitHub</a>
+        <a href="#">Security Policy</a>
+      </div>
+      <div class="footer-copy">© 2026 VoidGrand Security Labs</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((e, i) => {
+    if(e.isIntersecting){
+      setTimeout(() => e.target.classList.add('visible'), i * 100);
+    }
+  });
+},{threshold:0.12});
+document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
