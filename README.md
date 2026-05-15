@@ -13,7 +13,7 @@ Clone the repository and install the necessary requirements:
 ```
 git clone https://github.com/voidcraftggs/VoidGuard.git
 cd VoidGuard
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 python VoidScan2.py
 ```
 ## 📖 Usage
