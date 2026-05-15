@@ -11,9 +11,11 @@
 
 Clone the repository and install the necessary requirements:
 ```
+pkg update
+pkg install python git clang rust -y
 git clone https://github.com/voidcraftggs/VoidGuard.git
 cd VoidGuard
-python -m pip install -r requirements.txt
+pip install -r requirements.txt
 python VoidScan2.py
 ```
 ## 📖 Usage
